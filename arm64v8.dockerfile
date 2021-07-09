@@ -14,12 +14,20 @@ COPY openmediavault.list /etc/apt/sources.list.d/
 
 ENV DEBIAN_FRONTEND noninteractive
 
-# Fix resolvconf issues with Docker
-RUN echo "resolvconf resolvconf/linkify-resolvconf boolean false" | debconf-set-selections
+ENV LANG=C.UTF-8
+ENV APT_LISTCHANGES_FRONTEND=none
 
-# Install OpenMediaVault packages and dependencies
-RUN apt-get update -y; apt-get install openmediavault-keyring postfix locales -y --force-yes
-RUN apt-get update -y; apt-get install openmediavault -y
+RUN apt-get update && apt-get install --no-install-recommends -yq wget \
+ && wget -O "/etc/apt/trusted.gpg.d/openmediavault-archive-keyring.asc" https://packages.openmediavault.org/public/archive.key \
+ && apt-key add "/etc/apt/trusted.gpg.d/openmediavault-archive-keyring.asc" \
+ && apt-get --yes --auto-remove --show-upgraded \
+    --allow-downgrades --allow-change-held-packages \
+    --no-install-recommends \
+    --option Dpkg::Options::="--force-confdef" \
+    --option DPkg::Options::="--force-confold" \
+    install openmediavault-keyring openmediavault
+
+#RUN omv-confdbadm populate
 
 # We need to make sure rrdcached uses /data for it's data
 COPY defaults/rrdcached /etc/default
