@@ -10,7 +10,9 @@ FROM debian:buster
 # Add QEMU
 COPY --from=builder qemu-aarch64-static /usr/bin
 
-RUN apt-get update && apt-get install wget \
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && apt-get -yq install wget \
  && wget https://github.com/OpenMediaVault-Plugin-Developers/installScript/raw/master/install \
  && chmod +x install \
  && ./install -r -f 
